@@ -16,7 +16,7 @@ struct chayang {
 	struct wl_list seats;
 
 	bool running;
-	int64_t start_time_ms;
+	int64_t delay_ms, start_time_ms;
 };
 
 struct chayang_output {

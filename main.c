@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,8 +12,6 @@
 #include "single-pixel-buffer-v1-protocol.h"
 #include "viewporter-protocol.h"
 #include "wlr-layer-shell-unstable-v1-protocol.h"
-
-#define DIM_DELAY_MS 3000
 
 static void repaint_output(struct chayang_output *output);
 
@@ -37,7 +36,7 @@ static const struct wl_callback_listener frame_callback_listener = {
 
 static void repaint_output(struct chayang_output *output) {
 	int64_t delta = now_ms() - output->chayang->start_time_ms;
-	double progress = (double)delta / DIM_DELAY_MS;
+	double progress = (double)delta / output->chayang->delay_ms;
 	if (progress >= 1) {
 		output->chayang->running = false;
 		return;
@@ -250,6 +249,31 @@ int main(int argc, char *argv[]) {
 	struct chayang state = {0};
 	wl_list_init(&state.outputs);
 	wl_list_init(&state.seats);
+
+	double delay_sec = 3;
+	while (1) {
+		int opt = getopt(argc, argv, "hd:");
+		if (opt < 0) {
+			break;
+		}
+
+		switch (opt) {
+		case 'd':
+			char *end = NULL;
+			errno = 0;
+			delay_sec = strtod(optarg, &end);
+			if (errno != 0 || end == optarg || end != &optarg[strlen(optarg)]) {
+				fprintf(stderr, "invalid -d value\n");
+				return 1;
+			}
+			break;
+		default:
+			fprintf(stderr, "usage: chayang [-d seconds]\n");
+			return opt == 'h' ? 0 : 1;
+		}
+	}
+
+	state.delay_ms = delay_sec * 1000;
 
 	struct wl_display *display = wl_display_connect(NULL);
 	if (display == NULL) {
