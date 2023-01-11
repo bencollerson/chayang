@@ -24,6 +24,11 @@ static int64_t now_ms(void) {
 	return (int64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
 
+static void cancel(struct chayang *state) {
+	state->running = false;
+	state->cancelled = true;
+}
+
 static void frame_callback_handle_done(void *data, struct wl_callback *callback, uint32_t time) {
 	struct chayang_output *output = data;
 	wl_callback_destroy(callback);
@@ -108,19 +113,19 @@ static void pointer_handle_leave(void *data, struct wl_pointer *wl_pointer, uint
 
 static void pointer_handle_motion(void *data, struct wl_pointer *wl_pointer, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	struct chayang_seat *seat = data;
-	seat->chayang->running = false;
+	cancel(seat->chayang);
 }
 
 static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
 	struct chayang_seat *seat = data;
 	if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
-		seat->chayang->running = false;
+		cancel(seat->chayang);
 	}
 }
 
 static void pointer_handle_axis(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value) {
-	struct chayang_seat *output = data;
-	output->chayang->running = false;
+	struct chayang_seat *seat = data;
+	cancel(seat->chayang);
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -146,7 +151,7 @@ static void keyboard_handle_leave(void *data, struct wl_keyboard *wl_keyboard, u
 static void keyboard_handle_key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
 	struct chayang_seat *seat = data;
 	if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-		seat->chayang->running = false;
+		cancel(seat->chayang);
 	}
 }
 
@@ -333,6 +338,9 @@ int main(int argc, char *argv[]) {
 			ret = 1;
 			break;
 		}
+	}
+	if (ret == 0 && state.cancelled) {
+		ret = 2;
 	}
 
 	struct chayang_output *output_tmp;
