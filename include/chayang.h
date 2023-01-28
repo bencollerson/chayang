@@ -28,6 +28,7 @@ struct chayang_output {
 	struct wl_surface *surface;
 	struct zwlr_layer_surface_v1 *layer_surface;
 	struct wp_viewport *viewport;
+	struct wl_callback *frame_callback;
 
 	int32_t surface_width, surface_height;
 };

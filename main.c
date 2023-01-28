@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +32,12 @@ static void cancel(struct chayang *state) {
 
 static void frame_callback_handle_done(void *data, struct wl_callback *callback, uint32_t time) {
 	struct chayang_output *output = data;
+	if (callback == NULL) {
+		return;
+	}
+	assert(callback == output->frame_callback);
 	wl_callback_destroy(callback);
+	output->frame_callback = NULL;
 	repaint_output(output);
 }
 
@@ -53,8 +59,11 @@ static void repaint_output(struct chayang_output *output) {
 
 	wp_viewport_set_destination(output->viewport, output->surface_width, output->surface_height);
 
-	struct wl_callback *frame_callback = wl_surface_frame(output->surface);
-	wl_callback_add_listener(frame_callback, &frame_callback_listener, output);
+	if (output->frame_callback != NULL) {
+		wl_callback_destroy(output->frame_callback);
+	}
+	output->frame_callback = wl_surface_frame(output->surface);
+	wl_callback_add_listener(output->frame_callback, &frame_callback_listener, output);
 
 	wl_surface_damage(output->surface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_commit(output->surface);
@@ -63,6 +72,9 @@ static void repaint_output(struct chayang_output *output) {
 }
 
 static void destroy_output(struct chayang_output *output) {
+	if (output->frame_callback != NULL) {
+		wl_callback_destroy(output->frame_callback);
+	}
 	wp_viewport_destroy(output->viewport);
 	zwlr_layer_surface_v1_destroy(output->layer_surface);
 	wl_surface_destroy(output->surface);
