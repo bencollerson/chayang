@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		switch (opt) {
-		case 'd':
+		case 'd':;
 			char *end = NULL;
 			errno = 0;
 			delay_sec = strtod(optarg, &end);
