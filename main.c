@@ -32,9 +32,6 @@ static void cancel(struct chayang *state) {
 
 static void frame_callback_handle_done(void *data, struct wl_callback *callback, uint32_t time) {
 	struct chayang_output *output = data;
-	if (callback == NULL) {
-		return;
-	}
 	assert(callback == output->frame_callback);
 	wl_callback_destroy(callback);
 	output->frame_callback = NULL;
