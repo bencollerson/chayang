@@ -5,6 +5,8 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <wayland-client.h>
 #include <wayland-cursor.h>
@@ -268,8 +270,9 @@ int main(int argc, char *argv[]) {
 	state.ignore_mouse = false;
 
 	double delay_sec = 3;
+	char *command = NULL;
 	while (1) {
-		int opt = getopt(argc, argv, "hMd:");
+		int opt = getopt(argc, argv, "hMc:d:");
 		if (opt < 0) {
 			break;
 		}
@@ -287,8 +290,11 @@ int main(int argc, char *argv[]) {
 		case 'M':;
 			state.ignore_mouse = true;
 			break;
+		case 'c':;
+			command = optarg;
+			break;
 		default:
-			fprintf(stderr, "usage: chayang [-M] [-d seconds]\n");
+			fprintf(stderr, "usage: chayang [-M] [-d seconds] [-c command]\n");
 			return opt == 'h' ? 0 : 1;
 		}
 	}
@@ -356,6 +362,19 @@ int main(int argc, char *argv[]) {
 	}
 	if (ret == 0 && state.cancelled) {
 		ret = 2;
+	}
+
+	if (command && ret == 0) {
+		int status;
+		pid_t pid = fork();
+
+		if (pid == 0)
+			execl("/bin/sh", "/bin/sh", "-c", command, NULL);
+
+		if (waitpid(pid, &status, 0) < 0 || WEXITSTATUS(status) != 0) {
+			fprintf(stderr, "error running command `%s`\n", command);
+			ret = 1;
+		}
 	}
 
 	struct chayang_output *output_tmp;
