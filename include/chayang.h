@@ -15,7 +15,7 @@ struct chayang {
 	struct wl_list outputs;
 	struct wl_list seats;
 
-	bool running, cancelled;
+	bool running, cancelled, ignore_mouse;
 	int64_t delay_ms, start_time_ms;
 };
 

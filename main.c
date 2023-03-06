@@ -122,7 +122,9 @@ static void pointer_handle_leave(void *data, struct wl_pointer *wl_pointer, uint
 
 static void pointer_handle_motion(void *data, struct wl_pointer *wl_pointer, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	struct chayang_seat *seat = data;
-	cancel(seat->chayang);
+	if (!seat->chayang->ignore_mouse) {
+		cancel(seat->chayang);
+	}
 }
 
 static void pointer_handle_button(void *data, struct wl_pointer *wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
@@ -263,10 +265,11 @@ int main(int argc, char *argv[]) {
 	struct chayang state = {0};
 	wl_list_init(&state.outputs);
 	wl_list_init(&state.seats);
+	state.ignore_mouse = false;
 
 	double delay_sec = 3;
 	while (1) {
-		int opt = getopt(argc, argv, "hd:");
+		int opt = getopt(argc, argv, "hMd:");
 		if (opt < 0) {
 			break;
 		}
@@ -281,8 +284,11 @@ int main(int argc, char *argv[]) {
 				return 1;
 			}
 			break;
+		case 'M':;
+			state.ignore_mouse = true;
+			break;
 		default:
-			fprintf(stderr, "usage: chayang [-d seconds]\n");
+			fprintf(stderr, "usage: chayang [-M] [-d seconds]\n");
 			return opt == 'h' ? 0 : 1;
 		}
 	}
