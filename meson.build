@@ -1,7 +1,7 @@
 project(
 	'chayang',
 	'c',
-	version: '0.1.0',
+        version: run_command('git', 'describe', '--tags').stdout().strip(),
 	default_options: ['c_std=c11', 'warning_level=2', 'werror=true'],
 )
 
@@ -25,4 +25,5 @@ executable(
 	],
 	include_directories: 'include',
 	install: true,
+        c_args: '-DCHAYANG_VERSION="@0@"'.format(meson.project_version()),
 )

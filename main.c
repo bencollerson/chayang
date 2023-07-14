@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
 	double delay_sec = 3;
 	char *command = NULL;
 	while (1) {
-		int opt = getopt(argc, argv, "hMc:d:");
+		int opt = getopt(argc, argv, "hvMc:d:");
 		if (opt < 0) {
 			break;
 		}
@@ -293,8 +293,11 @@ int main(int argc, char *argv[]) {
 		case 'c':;
 			command = optarg;
 			break;
+		case 'v':;
+			printf("chayang %s\n", CHAYANG_VERSION);
+			return(0);
 		default:
-			fprintf(stderr, "usage: chayang [-M] [-d seconds] [-c command]\n");
+			fprintf(stderr, "usage: chayang [-v] [-M] [-d seconds] [-c command]\n");
 			return opt == 'h' ? 0 : 1;
 		}
 	}
